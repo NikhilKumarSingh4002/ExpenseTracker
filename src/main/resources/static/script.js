@@ -38,6 +38,24 @@ function generateID() {
   return Math.floor(Math.random() * 100000000);
 }
 
+// function addTransaction(e) {
+//   e.preventDefault();
+//   if (text.value.trim() === "" || amount.value.trim() === "") {
+//     showNotification();
+//   } else {
+//     const transaction = {
+//       id: generateID(),
+//       text: text.value,
+//       amount: +amount.value,
+//     };
+//     transactions.push(transaction);
+//     addTransactionDOM(transaction);
+//     updateValues();
+//     // updateLocaleStorage();
+//     text.value = "";
+//     amount.value = "";
+//   }
+// }
 function addTransaction(e) {
   e.preventDefault();
   if (text.value.trim() === "" || amount.value.trim() === "") {
@@ -48,10 +66,26 @@ function addTransaction(e) {
       text: text.value,
       amount: +amount.value,
     };
+
     transactions.push(transaction);
     addTransactionDOM(transaction);
     updateValues();
-    // updateLocaleStorage();
+
+    // Send transaction data to backend
+    fetch("http://localhost:8080/api/expenses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: transaction.text, // ✅ Correct field name for Spring Boot model
+        amount: transaction.amount,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => console.log("Transaction saved:", data))
+      .catch((error) => console.error("Error:", error));
+
     text.value = "";
     amount.value = "";
   }
@@ -69,6 +103,7 @@ function addTransactionDOM(transaction) {
     `;
   list.appendChild(item);
 }
+
 
 function updateValues() {
   const amounts = transactions.map((transaction) => transaction.amount);
