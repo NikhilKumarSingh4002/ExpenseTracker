@@ -7,26 +7,9 @@ const text = document.getElementById("text");
 const amount = document.getElementById("amount");
 const notification = document.getElementById("notification");
 
-const dummyTransactions = [
-  { id: 1, text: "Flower", amount: -20 },
-  { id: 2, text: "Salary", amount: 300 },
-  { id: 3, text: "Book", amount: -10 },
-  { id: 4, text: "Camera", amount: 150 },
-];
+let transactions = [];
 
-let transactions = dummyTransactions;
-
-// LocalStorage is not enabled in CodePen for security reasons
-// const localStorageTransactions = JSON.parse(
-//   localStorage.getItem("transactions")
-// );
-// let transactions =
-//   localStorageTransactions !== null ? localStorageTransactions : [];
-
-// function updateLocaleStorage() {
-//   localStorage.setItem("transactions", JSON.stringify(transactions));
-// }
-
+// Show alert for empty input
 function showNotification() {
   notification.classList.add("show");
   setTimeout(() => {
@@ -34,56 +17,37 @@ function showNotification() {
   }, 2000);
 }
 
+// Generate a temporary frontend ID (optional)
 function generateID() {
   return Math.floor(Math.random() * 100000000);
 }
 
-// function addTransaction(e) {
-//   e.preventDefault();
-//   if (text.value.trim() === "" || amount.value.trim() === "") {
-//     showNotification();
-//   } else {
-//     const transaction = {
-//       id: generateID(),
-//       text: text.value,
-//       amount: +amount.value,
-//     };
-//     transactions.push(transaction);
-//     addTransactionDOM(transaction);
-//     updateValues();
-//     // updateLocaleStorage();
-//     text.value = "";
-//     amount.value = "";
-//   }
-// }
+// Add transaction via form
 function addTransaction(e) {
   e.preventDefault();
+
   if (text.value.trim() === "" || amount.value.trim() === "") {
     showNotification();
   } else {
     const transaction = {
-      id: generateID(),
       text: text.value,
       amount: +amount.value,
     };
 
-    transactions.push(transaction);
-    addTransactionDOM(transaction);
-    updateValues();
-
-    // Send transaction data to backend
+    // Send to backend
     fetch("http://localhost:8080/api/expenses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        text: transaction.text, // ✅ Correct field name for Spring Boot model
-        amount: transaction.amount,
-      }),
+      body: JSON.stringify(transaction),
     })
       .then((response) => response.json())
-      .then((data) => console.log("Transaction saved:", data))
+      .then((data) => {
+        transactions.push(data); // Add response with real ID
+        addTransactionDOM(data);
+        updateValues();
+      })
       .catch((error) => console.error("Error:", error));
 
     text.value = "";
@@ -91,52 +55,77 @@ function addTransaction(e) {
   }
 }
 
+// Display one transaction
 function addTransactionDOM(transaction) {
   const sign = transaction.amount < 0 ? "-" : "+";
   const item = document.createElement("li");
   item.classList.add(sign === "+" ? "plus" : "minus");
+
   item.innerHTML = `
-          ${transaction.text} <span>${sign}${Math.abs(transaction.amount)}</span
-          ><button class="delete-btn" onclick="removeTransaction(${
-            transaction.id
-          })"><i class="fa fa-times"></i></button>
-    `;
+    ${transaction.text} 
+    <span>${sign}${Math.abs(transaction.amount)}</span>
+    <button class="delete-btn" onclick="removeTransaction('${transaction.id}')">
+      <i class="fa fa-times"></i>
+    </button>
+  `;
+
   list.appendChild(item);
 }
 
-
+// Update balance, income, and expense
 function updateValues() {
   const amounts = transactions.map((transaction) => transaction.amount);
-  const total = amounts
-    .reduce((accumulator, value) => (accumulator += value), 0)
-    .toFixed(2);
+  const total = amounts.reduce((acc, val) => acc + val, 0).toFixed(2);
   const income = amounts
-    .filter((value) => value > 0)
-    .reduce((accumulator, value) => (accumulator += value), 0)
+    .filter((val) => val > 0)
+    .reduce((acc, val) => acc + val, 0)
     .toFixed(2);
   const expense = (
     amounts
-      .filter((value) => value < 0)
-      .reduce((accumulator, value) => (accumulator += value), 0) * -1
+      .filter((val) => val < 0)
+      .reduce((acc, val) => acc + val, 0) * -1
   ).toFixed(2);
+
   balance.innerText = `$${total}`;
   moneyPlus.innerText = `$${income}`;
   moneyMinus.innerText = `$${expense}`;
 }
 
+// Delete transaction from backend + UI
 function removeTransaction(id) {
-  transactions = transactions.filter((transaction) => transaction.id !== id);
-  // updateLocaleStorage();
-  init();
+  fetch(`http://localhost:8080/api/expenses/${id}`, {
+    method: "DELETE",
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to delete transaction");
+      }
+      transactions = transactions.filter((transaction) => transaction.id !== id);
+      init();
+    })
+    .catch((error) => {
+      console.error("Error deleting transaction:", error);
+    });
 }
 
-// Init
+// Fetch all transactions from backend
+function fetchTransactions() {
+  fetch("http://localhost:8080/api/expenses")
+    .then((response) => response.json())
+    .then((data) => {
+      transactions = data;
+      init();
+    })
+    .catch((error) => console.error("Error fetching transactions:", error));
+}
+
+// Render app
 function init() {
   list.innerHTML = "";
   transactions.forEach(addTransactionDOM);
   updateValues();
 }
 
-init();
-
+// Initialize app with backend data
+fetchTransactions();
 form.addEventListener("submit", addTransaction);

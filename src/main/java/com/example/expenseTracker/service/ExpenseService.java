@@ -18,4 +18,7 @@ public class ExpenseService {
     public List<Expense> getExpensesByUser(String username) {
         return expenseRepository.findByUsername(username);
     }
+    public void deleteExpense(String id) {
+        expenseRepository.deleteById(id);
+    }
 }
