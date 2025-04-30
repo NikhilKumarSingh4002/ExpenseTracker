@@ -9,6 +9,9 @@ const notification = document.getElementById("notification");
 
 let transactions = [];
 
+// Set your Render service's public URL
+const apiBaseUrl = "https://expensetracker-o237.onrender.com/api/expenses";  // Replace with your actual Render URL
+
 // Show alert for empty input
 function showNotification() {
   notification.classList.add("show");
@@ -34,8 +37,8 @@ function addTransaction(e) {
       amount: +amount.value,
     };
 
-    // Send to backend
-    fetch("http://localhost:8080/api/expenses", {
+    // Send to backend (Render URL)
+    fetch(apiBaseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,7 +96,7 @@ function updateValues() {
 
 // Delete transaction from backend + UI
 function removeTransaction(id) {
-  fetch(`http://localhost:8080/api/expenses/${id}`, {
+  fetch(`${apiBaseUrl}/${id}`, {
     method: "DELETE",
   })
     .then((response) => {
@@ -110,7 +113,7 @@ function removeTransaction(id) {
 
 // Fetch all transactions from backend
 function fetchTransactions() {
-  fetch("http://localhost:8080/api/expenses")
+  fetch(apiBaseUrl)
     .then((response) => response.json())
     .then((data) => {
       transactions = data;
