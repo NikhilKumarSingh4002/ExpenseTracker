@@ -19,37 +19,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeRequests(auth -> auth
-                        // Allow login page and static resources to be accessed without authentication
-                        .requestMatchers("/login.html", "/login.css", "/favicon.ico", "/js/**", "/css/**", "/*.css", "/*.js").permitAll()
-                        // All other requests should be authenticated
-                        .anyRequest().authenticated()
-                )
-                .formLogin(form -> form
-                        .loginPage("/login.html")  // Custom login page
-                        .loginProcessingUrl("/login")  // URL to process login form submission
-                        .defaultSuccessUrl("/index.html", true)  // Redirect after successful login
-                        .failureUrl("/login.html?error=true")  // Redirect on failure
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")  // URL to log out
-                        .logoutSuccessUrl("/login.html?logout=true")  // Redirect after logout
-                )
-                .csrf(csrf -> csrf.disable());  // Disable CSRF for simplicity, you can enable it later if needed
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/login.html", "/login.css", "/favicon.ico",
+                    "/js/**", "/css/**", "/*.css", "/*.js"
+                ).permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login.html")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/index.html", true)
+                .failureUrl("/login.html?error=true")
+                .permitAll()
+            )
+            .httpBasic(httpBasic -> {}) // Enable HTTP Basic Auth
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login.html?logout=true")
+            )
+            .csrf(csrf -> csrf.disable());  // Disable CSRF for testing
+
         return http.build();
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.withUsername("admin")
-                .password("admin")  // Plaintext password for testing (use encoder in production)
-                .roles("USER")
-                .build();
+            .password("admin")
+            .roles("USER")
+            .build();
         return new InMemoryUserDetailsManager(user);
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();  // No password encoding for testing (use a proper encoder in production)
+        return NoOpPasswordEncoder.getInstance();  // Not for production!
     }
 }
