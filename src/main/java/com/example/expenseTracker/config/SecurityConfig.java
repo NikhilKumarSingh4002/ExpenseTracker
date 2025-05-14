@@ -15,9 +15,8 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        // Creating an admin user for in-memory authentication
         UserDetails adminUser = User.withUsername("admin")
-                .password("{noop}admin") // {noop} disables password encoding (for testing only)
+                .password("{noop}admin") // {noop} for testing
                 .roles("ADMIN")
                 .build();
         return new InMemoryUserDetailsManager(adminUser);
@@ -26,17 +25,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())  // Disable CSRF protection (optional for testing)
+            .csrf(csrf -> csrf.disable())  // Disable CSRF for simplicity (enable in production)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/").authenticated()  // Secure root path with authentication
-                .requestMatchers("/index.html").permitAll()  // Allow index.html without authentication
-                .anyRequest().permitAll()  // Allow other resources
+                .requestMatchers("/").authenticated()  // Secure root path
+                .requestMatchers("/login", "/login.html", "/css/**", "/js/**").permitAll()  // Allow login page and static resources
+                .anyRequest().authenticated()  // Secure all other paths
             )
             .formLogin(form -> form
-                .permitAll()  // Use Spring Security's default login page
+                .loginPage("/login.html")  // Custom login page
+                .loginProcessingUrl("/login")  // Form submits to this URL
+                .defaultSuccessUrl("/", true)  // Redirect to root after login
+                .failureUrl("/login.html?error=true")  // Redirect back on failure
+                .permitAll()
             )
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)  // Allow session creation if needed
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             );
 
         return http.build();
