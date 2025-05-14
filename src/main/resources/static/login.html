@@ -3,34 +3,20 @@
 <head>
     <meta charset="utf-8">
     <title>Login</title>
-    <link rel="stylesheet" href="login.css"> <!-- Keep your original path -->
+    <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    <div class="login-wrap">
-        <div class="login-html">
-            <input id="tab-1" type="radio" name="tab" class="sign-in" checked>
-            <label for="tab-1" class="tab">Sign In</label>
-            <div class="login-form">
-                <!-- CHANGE ONLY THIS LINE -->
-                <form action="/login" method="post" th:action="@{/login}">
-                    <div class="group">
-                        <label for="username" class="label">Username</label>
-                        <input id="username" name="username" type="text" class="input" required>
-                    </div>
-                    <div class="group">
-                        <label for="password" class="label">Password</label>
-                        <input id="password" name="password" type="password" class="input" required>
-                    </div>
-                    <div class="group">
-                        <button type="submit" class="button">Sign In</button>
-                    </div>
-                    <!-- Add this error message div -->
-                    <div th:if="${param.error}" style="color:red;text-align:center">
-                        Invalid username/password
-                    </div>
-                </form>
-            </div>
+    <form action="/login" method="post">
+        <label>Username: <input type="text" name="username" required></label><br>
+        <label>Password: <input type="password" name="password" required></label><br>
+        <button type="submit">Login</button>
+        <div style="color:red; text-align:center;">
+            <script>
+                if (window.location.search.includes("error=true")) {
+                    document.write("Invalid username/password");
+                }
+            </script>
         </div>
-    </div>
+    </form>
 </body>
 </html>
