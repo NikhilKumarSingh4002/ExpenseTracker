@@ -1,26 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="/login.css"> <!-- Link to your CSS -->
+    <title>Expense Tracker - Login</title>
+    <link rel="stylesheet" href="/css/login.css"> <!-- Updated path to CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
     <div class="login-wrap">
         <div class="login-html">
-            <input id="tab-1" type="radio" name="tab" class="sign-in" checked><label for="tab-1" class="tab">Sign In</label>
+            <input id="tab-1" type="radio" name="tab" class="sign-in" checked>
+            <label for="tab-1" class="tab">Sign In</label>
             <div class="login-form">
-                <form action="/login" method="post"> <!-- Submit to /login -->
+                <form action="/perform_login" method="post"> <!-- Changed to match SecurityConfig -->
+                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" th:if="${_csrf}"> <!-- CSRF protection -->
+                    
                     <div class="group">
                         <label for="username" class="label">Username</label>
-                        <input id="username" name="username" type="text" class="input" required> <!-- name="username" -->
+                        <input id="username" name="username" type="text" class="input" 
+                               required autocomplete="username" placeholder="Enter admin">
                     </div>
                     <div class="group">
                         <label for="password" class="label">Password</label>
-                        <input id="password" name="password" type="password" class="input" required> <!-- name="password" -->
+                        <input id="password" name="password" type="password" class="input" 
+                               required autocomplete="current-password" placeholder="Enter admin">
                     </div>
                     <div class="group">
                         <button type="submit" class="button">Sign In</button>
+                    </div>
+                    <div th:if="${param.error}" class="error-message">
+                        Invalid username or password
+                    </div>
+                    <div th:if="${param.logout}" class="success-message">
+                        You have been logged out successfully
                     </div>
                 </form>
             </div>
